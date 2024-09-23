@@ -1,4 +1,4 @@
-# FBA Pool Management API
+# FBA Finance Management API
 
 ## 🚀 Introduction
 
