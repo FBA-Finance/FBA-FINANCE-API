@@ -110,7 +110,7 @@ async def advanced_search_businesses(
     if max_year_founded:
         businesses_query = businesses_query.filter(Users.yearFounded <= max_year_founded)
 
-    # Apply sorting
+    # Apply sorting here
     if sort_by not in AdvancedBusinessSearchResponse.__fields__:
         raise HTTPException(status_code=400, detail=f"Invalid sort field: {sort_by}")
     if sort_order.lower() not in ["asc", "desc"]:
