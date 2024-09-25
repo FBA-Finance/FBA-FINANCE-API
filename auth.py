@@ -55,7 +55,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db=Depends(get_d
         if user is None:
             raise credentials_exception
         user['id'] = str(user['_id'])
-        del user['_id']  # Remove the '_id' field as we've added 'id'
+        del user['_id']
         return UserModel(**user)
     except JWTError:
         raise credentials_exception
