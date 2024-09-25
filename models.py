@@ -1,46 +1,68 @@
-from config.database import Base
-from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime, ForeignKey
+# models.py
+from pydantic import BaseModel, EmailStr, Field
+from typing import Optional
 from datetime import datetime
-from sqlalchemy.orm import relationship
+
+class UserCreate(BaseModel):
+    business_name: str
+    business_email: EmailStr
+    password: str
+
+class UserModel(BaseModel):
+    id: str
+    business_name: str
+    business_email: EmailStr
+    hashed_password: str
+
+    business_size: Optional[int] = None
+    registrationNumber: Optional[str] = None
+    yearFounded: Optional[int] = None
+
+    phone: Optional[str] = None
+    website: Optional[str] = None
+    city: Optional[str] = None
+    country: Optional[str] = None
+    address: Optional[str] = None
+    industry: Optional[str] = None
+    postalcode: Optional[int] = None
+
+    annualRevenue: Optional[int] = None
+    employeeCount: Optional[int] = None
+    hasOutstandingLoans: Optional[bool] = None
+    approximateMonthlyRevenue: Optional[float] = None
+    approximateMonthlyExpenses: Optional[float] = None
+    lastYearRevenue: Optional[float] = None
+    currentYearProjectedRevenue: Optional[float] = None
+    
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    kycStatus: Optional[str] = None
 
 
-class Users(Base):
-    __tablename__ = 'users'
+class UserResponse(BaseModel):
+    id: str
+    business_name: str
+    business_email: EmailStr
+    business_size: Optional[int] = None
+    registrationNumber: Optional[str] = None
+    yearFounded: Optional[int] = None
+    phone: Optional[str] = None
+    website: Optional[str] = None
+    city: Optional[str] = None
+    country: Optional[str] = None
+    address: Optional[str] = None
+    industry: Optional[str] = None
+    postalcode: Optional[int] = None
+    annualRevenue: Optional[int] = None
+    employeeCount: Optional[int] = None
+    hasOutstandingLoans: Optional[bool] = None
+    approximateMonthlyRevenue: Optional[float] = None
+    approximateMonthlyExpenses: Optional[float] = None
+    lastYearRevenue: Optional[float] = None
+    currentYearProjectedRevenue: Optional[float] = None
+    created_at: datetime
+    kycStatus: Optional[str] = None
 
-    business_id = Column(Integer, primary_key=True, index=True)
-    business_name = Column(String, nullable=False)
-    business_email = Column(String, unique=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
-
-    # More Business Details
-    business_size = Column(Integer, nullable=True)
-    registrationNumber = Column(String, nullable=True)
-    yearFounded = Column(Integer, nullable=True)
-    phone = Column(String, nullable=True)
-    website = Column(String, nullable=True)
-    city = Column(String, nullable=True)
-    country = Column(String, nullable=True)
-    address = Column(String, nullable=True)
-    industry = Column(String, nullable=True)
-    postalcode = Column(Integer, nullable=True)
-
-    # Financial Information
-    annualRevenue = Column(Integer, nullable=True)
-    employeeCount = Column(Integer, nullable=True)
-    hasOutstandingLoans = Column(Boolean, nullable=True)
-    approximateMonthlyRevenue = Column(Float, nullable=True)
-    approximateMonthlyExpenses = Column(Float, nullable=True)
-    lastYearRevenue = Column(Float, nullable=True)
-    currentYearProjectedRevenue = Column(Float, nullable=True)
-
-    created_at = Column(DateTime, default=datetime.utcnow)
-    kycStatus = Column(String, nullable=True)
-
-class BlacklistedToken(Base):
-    __tablename__ = "blacklisted_tokens"
-
-    id = Column(Integer, primary_key=True, index=True)
-    token = Column(String, unique=True, index=True)
-    blacklisted_on = Column(DateTime)
-    user_id = Column(Integer, ForeignKey("users.business_id"))
-    user = relationship("Users")
+class BlacklistedTokenModel(BaseModel):
+    token: str
+    blacklisted_on: datetime
+    user_id: str

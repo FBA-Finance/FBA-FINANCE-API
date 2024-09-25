@@ -1,9 +1,9 @@
+# utils.py
 from functools import wraps
 from fastapi import HTTPException, status
-from models import Users
-from sqlalchemy.inspection import inspect
+from models import UserModel
 
-def check_profile_completion(user: Users) -> float:
+def check_profile_completion(user: UserModel) -> float:
     required_fields = [
         'business_size', 'registrationNumber', 'yearFounded', 'phone', 'website',
         'city', 'country', 'address', 'industry', 'postalcode', 'annualRevenue',
@@ -11,21 +11,9 @@ def check_profile_completion(user: Users) -> float:
         'approximateMonthlyExpenses', 'lastYearRevenue', 'currentYearProjectedRevenue'
     ]
     
-    mapper = inspect(user).mapper
-    column_attrs = mapper.column_attrs
-
-    filled_fields = 0
-    for field in required_fields:
-        value = getattr(user, field)
-        column = column_attrs[field].columns[0]
-        
-        # Check if the value is not None and different from the default
-        if value is not None and value != column.default.arg if column.default else True:
-            filled_fields += 1
-    
+    filled_fields = sum(1 for field in required_fields if getattr(user, field) is not None)
     completion_percentage = (filled_fields / len(required_fields)) * 100
     return completion_percentage
-
 
 def require_complete_profile(min_completion_percentage: float = 100):
     def decorator(func):
@@ -44,3 +32,17 @@ def require_complete_profile(min_completion_percentage: float = 100):
             return await func(*args, **kwargs)
         return wrapper
     return decorator
+
+
+
+from bson import ObjectId
+from json import JSONEncoder
+from datetime import datetime
+
+class MongoJSONEncoder(JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)
+        if isinstance(o, datetime):
+            return o.isoformat()
+        return super().default(o)
