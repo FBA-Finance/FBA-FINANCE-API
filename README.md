@@ -1,4 +1,4 @@
-# FBA Finance Management API
+# FBA Finance Backend API
 
 ## 🚀 Introduction
 
@@ -16,7 +16,7 @@ Welcome to the FBA (Financial Business Association) Pool Management API! This po
 ## 🛠 Technology Stack
 
 - **Framework**: FastAPI
-- **Database**: SQLite - WILL BE CHANGED TO MONGODB THIS WEEK
+- **Database**: MongoDB
 - **Authentication**: JWT (JSON Web Tokens)
 - **Documentation**: Automatic API documentation with Swagger UI
 
