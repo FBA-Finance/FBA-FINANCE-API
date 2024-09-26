@@ -8,7 +8,7 @@ from models import UserModel
 from auth import get_current_user
 from utils import MongoJSONEncoder
 import json
-from models import UserResponse
+from models import UserResponse, UserUpdateModel, ProfileUserResponse
 
 router = APIRouter(prefix='/v1/api/business', tags=['Business'])
 
@@ -30,7 +30,8 @@ async def search_businesses(query: str = Query(..., min_length=1), db=Depends(ge
     
     return [UserResponse(**business, id=str(business["_id"])) for business in businesses]
 
-@router.get("/businesses/advanced-search")
+
+@router.get("/businesses/advanced-search", response_model=List[UserResponse])
 async def advanced_search_businesses(
     db=Depends(get_db),
     query: Optional[str] = Query(None, min_length=1),
@@ -75,7 +76,14 @@ async def advanced_search_businesses(
 
     sort_direction = 1 if sort_order.lower() == "asc" else -1
     businesses = await db.users.find(filter_query).sort(sort_by, sort_direction).to_list(length=None)
-    return businesses
+    
+    # Convert ObjectId to string and prepare the response
+    for business in businesses:
+        business['id'] = str(business['_id'])
+        del business['_id']
+    
+    # Use MongoJSONEncoder to handle ObjectId serialization
+    return json.loads(json.dumps(businesses, cls=MongoJSONEncoder))
 
 @router.get("/businesses", response_model=List[UserResponse])
 async def get_all_businesses(db=Depends(get_db)):
@@ -92,14 +100,28 @@ async def get_business_profile(business_id: str, db=Depends(get_db)):
 
 @router.put("/profile/update", status_code=status.HTTP_200_OK, response_model=UserResponse)
 async def update_profile(
-    profile_update: UserResponse,
+    profile_update: UserUpdateModel,
     current_user: UserModel = Depends(get_current_user),
     db=Depends(get_db)
 ):
-    update_data = profile_update.dict(exclude_unset=True, exclude={"id", "business_email", "created_at"})
-    await db.users.update_one({"_id": ObjectId(current_user.id)}, {"$set": update_data})
+    update_data = {k: v for k, v in profile_update.dict().items() if v is not None}
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No valid update data provided")
+
+    result = await db.users.update_one(
+        {"_id": ObjectId(current_user.id)},
+        {"$set": update_data}
+    )
+
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="User not found or no changes made")
+
     updated_user = await db.users.find_one({"_id": ObjectId(current_user.id)})
-    return UserResponse(**updated_user, id=str(updated_user["_id"]))
+    updated_user['id'] = str(updated_user['_id'])
+    del updated_user['_id']
+
+    return UserResponse(**updated_user)
 
 
 

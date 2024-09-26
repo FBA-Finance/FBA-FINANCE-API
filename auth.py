@@ -60,13 +60,19 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db=Depends(get_d
     except JWTError:
         raise credentials_exception
 
+# auth.py
+
 @router.post("/create_user", status_code=status.HTTP_201_CREATED, response_model=UserResponse)
 async def create_user(user: UserCreate, db=Depends(get_db)):
+    #CHECK FOR EXISTING USER
     existing_user = await db.users.find_one({"business_email": user.business_email})
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
+    #HASH PASSWORD
     hashed_password = get_password_hash(user.password)
+
+    #PASS IN NEW USER DETAILS FROM UserCreate Schema/Model
     new_user = {
         "business_name": user.business_name,
         "business_email": user.business_email,
@@ -91,7 +97,10 @@ async def create_user(user: UserCreate, db=Depends(get_db)):
         "created_at": datetime.utcnow(),
         "kycStatus": None
     }
+    #Add new user into the db with the insert_one func
     result = await db.users.insert_one(new_user)
+
+    #retrieve the user from the db using the id
     created_user = await db.users.find_one({"_id": result.inserted_id})
     created_user['id'] = str(created_user['_id'])
     del created_user['_id']

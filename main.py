@@ -6,6 +6,7 @@ import logging
 import auth
 from routes import business_route
 from utils import MongoJSONEncoder
+from scalar_fastapi import get_scalar_api_reference
 
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
@@ -43,6 +44,12 @@ async def generic_exception_handler(request: Request, exc: Exception):
 async def root():
     return {"message": "Welcome to the API. Please refer to /docs for the API documentation."}
 
+@app.get("/scalar", include_in_schema=False)
+async def scalar_html():
+    return get_scalar_api_reference(
+        openapi_url=app.openapi_url,
+        title=app.title,
+    )
 
 """ from fastapi import FastAPI, status, Depends, HTTPException, Request
 import models
